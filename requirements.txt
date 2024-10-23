@@ -1,0 +1,6 @@
+python-telegram-bot==20.3
+google-auth-oauthlib==1.0.0
+google-api-python-client==2.70.0
+speechrecognition==3.8.1
+python-dateutil==2.8.2
+timezonefinder==6.1.9
