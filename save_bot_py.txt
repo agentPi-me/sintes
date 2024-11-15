@@ -1,0 +1,278 @@
+import os
+import logging
+import pickle
+import tempfile
+import datetime
+import re
+import subprocess
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+import speech_recognition as sr
+from dateutil import parser
+
+# Автор: Ваше Имя
+
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Токен бота и области доступа Google Calendar
+BOT_TOKEN = "7931196709:AAGdsl3Ctdc30uBDrxf-C-XbcYaEcxj2nWY"
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+
+# Авторизация Google Calendar
+def authorize_google_calendar(update):
+    creds = None
+    try:
+        # Проверяем, существует ли токен
+        if os.path.exists('token.pickle'):
+            with open('token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+        # Если токен не существует или истек, запускаем процесс авторизации
+        if not creds or not creds.valid:
+            flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', SCOPES)
+            auth_url, _ = flow.authorization_url(prompt='consent')
+            update.message.reply_text(f'Перейдите по следующей ссылке, чтобы авторизоваться: {auth_url}')
+            creds = flow.run_local_server(port=0)
+            # Сохраняем новый токен
+            with open('token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
+    except Exception as e:
+        logger.error("Ошибка при авторизации в Google Calendar", exc_info=True)
+    return creds
+
+# Получение службы Google Calendar
+def get_calendar_service(update):
+    creds = authorize_google_calendar(update)
+    if creds:
+        return build('calendar', 'v3', credentials=creds)
+    logger.error("Не удалось получить учетные данные Google Calendar.")
+    return None
+
+# Обработчик команды /start
+async def start(update: Update, context: CallbackContext):
+    keyboard = [
+        ["/setup_calendar - Интеграция с Google Calendar"],
+        ["/add_task - Добавить задачу"],
+        ["/plan_day - Авто-планирование дня"],
+        ["/delete_task - Удалить задачу"],
+        ["/help - Помощь"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+    await update.message.reply_text(
+        "Привет! Я бот для планирования дня. Вот что я могу:"
+        "\n1. Интеграция с Google Calendar для удобного планирования мероприятий."
+        "\n2. Голосовое управление для добавления задач — просто скажите, что нужно сделать."
+        "\n3. Ведение базы данных задач и напоминаний, чтобы ничего не забыть."
+        "\n4. Автоматическое планирование на основе задач — бот поможет распределить ваши задачи по времени."
+        "\n5. Удаление задач в Google Calendar."
+        "\n\nЧтобы узнать больше о командах, используйте /help или выберите нужную команду с помощью кнопок ниже.",
+        reply_markup=reply_markup
+    )
+
+# Обработчик команды /help
+async def help_command(update: Update, context: CallbackContext):
+    await update.message.reply_text(
+        "Список команд:"
+        "\n/start - Начало работы с ботом"
+        "\n/setup_calendar - Интеграция с Google Calendar"
+        "\n/add_task - Добавление новой задачи (например, '/add_task завтра с 09:00 до 11:00 задача цвет синий')"
+        "\n/plan_day - Автоматическое планирование дня"
+        "\n/delete_task - Удаление задачи"
+        "\n/help - Получить справку по командам"
+    )
+
+# Обработчик команды /setup_calendar
+async def setup_calendar(update: Update, context: CallbackContext):
+    creds = authorize_google_calendar(update)
+    if creds:
+        await update.message.reply_text("Интеграция с Google Calendar завершена успешно!")
+    else:
+        await update.message.reply_text("Произошла ошибка при интеграции с Google Calendar.")
+
+# Обработчик команды /add_task
+async def add_task(update: Update, context: CallbackContext):
+    user_input = ' '.join(context.args)
+    if not user_input:
+        await update.message.reply_text("Пожалуйста, отправьте текст задачи после команды /add_task или голосовое сообщение.")
+        return
+    try:
+        # Ищем ключевые слова 'завтра' и время в формате 'с 14:00 до 15:00'
+        is_tomorrow = 'завтра' in user_input.lower()
+        time_match = re.search(r'(\d{1,2}:\d{2})\s*до\s*(\d{1,2}:\d{2})', user_input)
+        if not time_match:
+            await update.message.reply_text("Пожалуйста, укажите время в формате 'с 14:00 до 15:00'.")
+            return
+
+        start_time_str, end_time_str = time_match.groups()
+        color_match = re.search(r'цвет\s+(\w+)', user_input.lower())
+        color_name = color_match.group(1) if color_match else None
+        task_description = re.sub(r'(завтра\s*)?(с\s*)?(\d{1,2}:\d{2})\s*до\s*(\d{1,2}:\d{2})(\s*цвет\s+\w+)?', '', user_input, count=1).strip()
+
+        # Убираем лишние слова 'завтра', 'с', 'до', 'цвет', 'красный', 'синий', 'зеленый', 'желтый', 'фиолетовый' из описания задачи
+        task_description = re.sub(r'\b(завтра|Завтра|с|до|цвет|красный|синий|зеленый|желтый|фиолетовый)\b', '', task_description).strip()
+
+        # Парсим время начала и окончания
+        start_time = parser.parse(start_time_str, fuzzy=True)
+        end_time = parser.parse(end_time_str, fuzzy=True)
+
+        now = datetime.datetime.now()
+        start_time = start_time.replace(year=now.year, month=now.month, day=now.day)
+        end_time = end_time.replace(year=now.year, month=now.month, day=now.day)
+
+        # Проверяем, указано ли 'завтра' в описании задачи
+        if is_tomorrow:
+            start_time += datetime.timedelta(days=1)
+            end_time += datetime.timedelta(days=1)
+
+        # Определяем цвет задачи
+        color_id_mapping = {
+            'красный': '11',
+            'синий': '9',
+            'зеленый': '10',
+            'желтый': '5',
+            'фиолетовый': '3',
+        }
+        color_id = color_id_mapping.get(color_name, None)
+
+        # Формируем сообщение с датой и временем для чата
+        date_str = start_time.strftime('%d %B').replace('October', 'октября').replace('November', 'ноября').replace('December', 'декабря').replace('January', 'января').replace('February', 'февраля').replace('March', 'марта').replace('April', 'апреля').replace('May', 'мая').replace('June', 'июня').replace('July', 'июля').replace('August', 'августа').replace('September', 'сентября')
+        await update.message.reply_text(f"Задача добавлена: {date_str} в {start_time.strftime('%H:%M')}-{end_time.strftime('%H:%M')} {task_description}")
+
+        # Добавляем событие в Google Calendar
+        service = get_calendar_service(update)
+        if service:
+            event = {
+                'summary': task_description,
+                'start': {'dateTime': start_time.isoformat(), 'timeZone': 'Asia/Almaty'},
+                'end': {'dateTime': end_time.isoformat(), 'timeZone': 'Asia/Almaty'},
+            }
+            if color_id:
+                event['colorId'] = color_id
+            service.events().insert(calendarId='primary', body=event).execute()
+    except Exception as e:
+        await update.message.reply_text("Произошла ошибка при обработке времени. Пожалуйста, используйте формат 'с 14:00 до 15:00'.")
+        logger.error("Ошибка при разборе времени задачи", exc_info=True)
+
+# Обработчик команды /delete_task
+async def delete_task(update: Update, context: CallbackContext):
+    user_input = ' '.join(context.args)
+    if not user_input:
+        await update.message.reply_text("Пожалуйста, отправьте название задачи, которую вы хотите удалить.")
+        return
+    try:
+        service = get_calendar_service(update)
+        if not service:
+            await update.message.reply_text("Ошибка при подключении к Google Calendar.")
+            return
+
+        # Поиск событий по названию
+        events_result = service.events().list(calendarId='primary', q=user_input, singleEvents=True).execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            await update.message.reply_text("Задача не найдена.")
+            return
+
+        # Если найдено несколько событий, уточняем у пользователя, какое удалить
+        if len(events) > 1:
+            event_descriptions = []
+            for i, event in enumerate(events):
+                start = event['start'].get('dateTime', event['start'].get('date'))
+                event_descriptions.append(f"{i + 1}. {event['summary']} - {start}")
+            await update.message.reply_text("Найдено несколько задач с таким названием. Укажите номер задачи, которую нужно удалить:\n" + "\n".join(event_descriptions))
+            context.user_data['events'] = events
+        else:
+            event = events[0]
+            service.events().delete(calendarId='primary', eventId=event['id']).execute()
+            await update.message.reply_text(f"Задача '{event['summary']}' успешно удалена.")
+    except Exception as e:
+        await update.message.reply_text("Произошла ошибка при удалении задачи.")
+        logger.error("Ошибка при удалении задачи", exc_info=True)
+
+# Обработчик ответа пользователя для удаления задачи
+async def delete_task_selection(update: Update, context: CallbackContext):
+    user_input = update.message.text
+    events = context.user_data.get('events')
+
+    if not events:
+        await update.message.reply_text("Ошибка: задачи для удаления не найдены.")
+        return
+
+    try:
+        selected_index = int(user_input) - 1
+        if 0 <= selected_index < len(events):
+            event = events[selected_index]
+            service = get_calendar_service(update)
+            service.events().delete(calendarId='primary', eventId=event['id']).execute()
+            await update.message.reply_text(f"Задача '{event['summary']}' успешно удалена.")
+        else:
+            await update.message.reply_text("Неверный номер задачи. Пожалуйста, попробуйте снова.")
+    except ValueError:
+        await update.message.reply_text("Пожалуйста, введите корректный номер задачи.")
+    except Exception as e:
+        await update.message.reply_text("Произошла ошибка при удалении задачи.")
+        logger.error("Ошибка при удалении задачи", exc_info=True)
+
+# Обработчик голосовых сообщений
+async def voice_message(update: Update, context: CallbackContext):
+    file = await context.bot.get_file(update.message.voice.file_id)
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_file:
+        await file.download_to_drive(temp_file.name)
+        wav_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav').name
+        recognizer = sr.Recognizer()
+        try:
+            # Конвертация OGG в WAV с помощью ffmpeg
+            subprocess.run(['ffmpeg', '-y', '-i', temp_file.name, wav_file], check=True)
+            with sr.AudioFile(wav_file) as source:
+                audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data, language='ru-RU')
+            await update.message.reply_text(f"Распознанный текст: {text}")
+            context.args = [text]  # Установить распознанный текст как аргумент для add_task
+            await add_task(update, context)
+        except subprocess.CalledProcessError:
+            await update.message.reply_text("Произошла ошибка при конвертации аудиофайла.")
+        except sr.UnknownValueError:
+            await update.message.reply_text("Не удалось распознать голосовое сообщение.")
+        except Exception as e:
+            logger.error("Ошибка при обработке голосового сообщения", exc_info=True)
+
+# Обработчик команды /plan_day
+async def plan_day(update: Update, context: CallbackContext):
+    await update.message.reply_text("Функция авто-планирования в разработке!")
+
+# Обработчик текстовых сообщений для обработки кнопок
+async def text_handler(update: Update, context: CallbackContext):
+    text = update.message.text
+    if text.startswith("/setup_calendar"):
+        await setup_calendar(update, context)
+    elif text.startswith("/add_task"):
+        await add_task(update, context)
+    elif text.startswith("/plan_day"):
+        await plan_day(update, context)
+    elif text.startswith("/delete_task"):
+        await delete_task(update, context)
+    elif text.startswith("/help"):
+        await help_command(update, context)
+    elif text.isdigit() and 'events' in context.user_data:
+        await delete_task_selection(update, context)
+
+# Основная функция
+def main():
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("setup_calendar", setup_calendar))
+    application.add_handler(CommandHandler("add_task", add_task))
+    application.add_handler(CommandHandler("plan_day", plan_day))
+    application.add_handler(CommandHandler("delete_task", delete_task))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(MessageHandler(filters.VOICE, voice_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()

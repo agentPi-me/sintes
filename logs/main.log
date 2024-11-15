@@ -1,0 +1,133 @@
+2024-10-31 14:06:31,605 - main - ERROR - Voice processing error: add_event_from_voice() missing 1 required positional argument: 'message_text'
+2024-10-31 14:16:59,541 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 14:16:59,543 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 14:17:35,424 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 14:17:35,425 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 14:25:42,116 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 14:25:42,117 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 14:26:33,570 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 14:26:33,570 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 21:17:43,441 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 21:17:43,443 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 22:07:38,510 - main - INFO - Received voice message: завтра с 14:30 до 15:30 совещание
+2024-10-31 22:07:38,512 - main - INFO - Match found: ('завтра', None, None, '14', '30', '15', '30', 'совещание', None, None, None, None, None, None)
+2024-10-31 22:30:52,583 - main - INFO - Received text message: <telegram.ext._callbackcontext.CallbackContext object at 0x000001586C7B6AC0>
+2024-10-31 22:31:17,286 - main - INFO - Received text message: <telegram.ext._callbackcontext.CallbackContext object at 0x000001586C8A9860>
+2024-10-31 22:31:27,751 - main - INFO - Received text message: <telegram.ext._callbackcontext.CallbackContext object at 0x000001586C8A99B0>
+2024-11-01 00:30:20,902 - main - INFO - Received text message: <telegram.ext._callbackcontext.CallbackContext object at 0x0000026641025080>
+2024-11-01 01:14:59,965 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQn4JWLy97nVPjY-ZNjUJNVdepUIBInASF2YW6v1QoSzbeoINFkmyb5ksYXF7rQsA
+2024-11-01 01:15:01,146 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 01:15:22,067 - main - INFO - Received authorization code from user 1982583714: Сегодня с 10:00 до 12:00 Встреча
+2024-11-01 01:15:22,068 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:15:29,705 - main - INFO - Received authorization code from user 1982583714: Завтра с 14:30 до 15:30 Совещание
+2024-11-01 01:15:29,706 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:15:35,599 - main - INFO - Received authorization code from user 1982583714: Послезавтра с 09:00 до 10:00 Звонок
+2024-11-01 01:15:35,600 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:18:22,686 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiRf6-uD6wlK3zXImmUq8FUTlMKuSR-Zw69RQgFu3il3_dZiaH-7sCVUZnDH152FPQ
+2024-11-01 01:18:23,739 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 01:18:40,437 - main - INFO - Received authorization code from user 1982583714: Сегодня с 10:00 до 12:00 Встреча
+2024-11-01 01:18:40,438 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:18:44,118 - main - INFO - Received authorization code from user 1982583714: cегодня с 10:00 до 12:00 Встреча
+2024-11-01 01:18:44,118 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:34:22,067 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiTuAY68dB_SF2CMg581zb_1KUdntELN6BM1Y0IDQj8yBzZsGx18anOwOmiwvX1bBw
+2024-11-01 01:34:23,387 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 01:34:38,271 - main - INFO - Received authorization code from user 1982583714: Сегодня с 10:00 до 12:00 Встреча
+2024-11-01 01:34:38,275 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:34:45,307 - main - INFO - Received authorization code from user 1982583714: Завтра с 14:30 до 15:30 Совещание
+2024-11-01 01:34:45,308 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:34:49,431 - main - INFO - Received authorization code from user 1982583714: pавтра с 14:30 до 15:30 Совещание
+2024-11-01 01:34:49,432 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:34:58,878 - main - INFO - Received authorization code from user 1982583714: завтра с 14:30 до 15:30 Совещание
+2024-11-01 01:34:58,880 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 01:46:04,780 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiTB0Emh4myQaDQzeRkV2qTyycZGMy_QgJDC0QqEd0Q8_P5r09L326lQUmtOAI2NkQ
+2024-11-01 01:46:06,188 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 01:46:20,421 - main - INFO - Received authorization code from user 1982583714: cегодня с 10:00 до 12:00 Встреча
+2024-11-01 01:46:20,422 - main - WARNING - No auth flow found for user 1982583714.
+2024-11-01 02:03:30,452 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiS8hmKTBkwrjl6BkfsYe9UEvB0A5_zC84ouQ8_4DplVHryQB4o-bdfwRncCNy-i6Q
+2024-11-01 02:03:31,784 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 02:03:52,675 - main - INFO - Received text message: Сегодня с 10:00 до 12:00 Встреча
+2024-11-01 02:03:59,534 - main - INFO - Received text message: cегодня с 10:00 до 12:00 Встреча
+2024-11-01 02:07:56,487 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiTr-jh7E-5k_AFqKFSpuMVOmQ-rVncaCTJsJFFCeIW991eVaiV-0_pPDzr2DyPORw
+2024-11-01 02:07:57,815 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 02:08:06,908 - main - INFO - Received text message: сегодня с 10:00 до 12:00 встреча
+2024-11-01 02:09:27,191 - main - INFO - Received text message: сегодня с 23 до 24 встреча
+2024-11-01 02:10:05,609 - main - INFO - Received text message: завтра с 14:30 до 15:30 совещание
+2024-11-01 02:10:21,315 - main - INFO - Received text message: послезавтра с 09:00 до 10:00 звонок
+2024-11-01 02:10:33,463 - main - INFO - Received text message: через два дня с 13:00 до 14:00 обед
+2024-11-01 02:21:03,164 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiS5oInY_-UWTCZ8TR6KYVdMK3su2HkfoSFQDbbqDbWXnPsOKqDGSNfu21GdBlK6aQ
+2024-11-01 02:21:04,264 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 02:34:39,026 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQdOgPPG864kvgJXPSRQyfPP7DvgnHQfwDfgSkq_hXieoFEPDAyJALtLfLS3HSS_A
+2024-11-01 02:34:40,051 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 02:35:17,017 - main - INFO - Received text message: игры
+2024-11-01 02:35:24,137 - main - INFO - Received text message: игры
+2024-11-01 02:37:15,594 - main - INFO - Received text message: 10:00-11:00
+2024-11-01 03:28:25,361 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiT6YRJuSdUz3mn0CxZV7nQ0Vm4qQy-9ph0v30j_ZGxozK9ie88_69bGvVqLNUdsgg
+2024-11-01 03:28:26,646 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 03:28:52,143 - main - INFO - Received text message: сегодня с 10:00 до 12:00 игры
+2024-11-01 03:29:42,012 - main - INFO - Received text message: 09:00-10:30
+2024-11-01 03:29:59,291 - main - INFO - Received text message: игры
+2024-11-01 03:30:15,803 - main - INFO - Received text message: 01.06.2024
+2024-11-01 03:43:29,397 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiRpPiw1JpZR_YUW042qUkITYIusvnvSYbexFaoxdbBUVPC-jZRA2MBxRoM7fEnXVA
+2024-11-01 03:43:30,727 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 03:44:07,080 - main - INFO - Received text message: игры
+2024-11-01 03:55:36,621 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiT9gW4bXX_kRw9_TRu0IZjKQyc6DpsEv0mtaW9jkTNG7hHg6fpnJrUUPIVIL6Xstg
+2024-11-01 03:55:37,864 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 03:57:08,487 - main - ERROR - Ошибка при редактировании события: <HttpError 404 when requesting https://www.googleapis.com/calendar/v3/calendars/primary/events/1?alt=json returned "Not Found". Details: "[{'domain': 'global', 'reason': 'notFound', 'message': 'Not Found'}]">
+2024-11-01 09:03:44,457 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQthPWGKAKAzu143dHqvu6zYhABDy-Fzta-j9v9DrIEuhWbxi5wfTk03ujWrC6D7w
+2024-11-01 09:03:45,780 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:05:53,148 - main - INFO - Received text message: 1
+2024-11-01 09:06:23,560 - main - INFO - Received text message: 25
+2024-11-01 09:13:35,160 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiRlXNIDGKdt6pFi0y-OXC3cV9UWWqscnABE8xo9f5Rphwi7ccDBCkGhGNtq4l3zIA
+2024-11-01 09:13:36,406 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:14:00,996 - main - INFO - Received text message: 1
+2024-11-01 09:14:30,304 - main - INFO - Received text message: 2
+2024-11-01 09:18:14,738 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQuUqNYqE758om7EK6MVFjLQfmVSmvZcETJ9tvAZkC1B8nuRmwx-9TR8igvC6rUGw
+2024-11-01 09:18:15,932 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:24:38,413 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiRAaMqJZocuEUT737bU8Sj3-uQK60KX77xll5qlSaoHuIwP8Fzi6M7NiPjU9m7zfg
+2024-11-01 09:24:39,420 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:32:30,914 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiR9m56r-mXM2kOTwxfe-Y45wKsmjyMe26_fkUk_h11xNzZkfr6gGHQBo0Drg3SqRw
+2024-11-01 09:32:32,024 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:35:44,406 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQ2aU9Eod3Bmm4iD2EtMtqAcctT8MkBrq9etnAE0TrQz6NGzfQ5tuc5ZHZIFyVilA
+2024-11-01 09:35:46,023 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:36:42,998 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQtNrD0Bg4OER2T547sFZ2RrFtqb3G_b0stVNJpxDg0R5jI-CCr4QU1YWvU8zOE7w
+2024-11-01 09:36:44,010 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:42:32,779 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiTujn8-9cvOYV7M_VM25uZ4Tt82ofqY64uSTKwmBmdLqSUrs7Im5l1NuoHYZ8RPYQ
+2024-11-01 09:42:34,062 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 09:46:53,603 - main - INFO - Received text message: сегодня с 10:00 до 12:00 астана
+2024-11-01 10:09:49,916 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQqAkN2rqKi6occTblfMXO1IwKOpdtpc5FlToSGTlIW0Gy-yu4je84aI6eW6rJrnA
+2024-11-01 10:09:51,182 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 10:12:38,769 - main - INFO - Received text message: сегодня с 10:00 до 12:00 встреча
+2024-11-01 10:30:33,767 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiQ1ieA6uaPmCMpqjFkYcT0RwIK8tMMc7pzE9cXOVVNzcL5Lqhs9Bo26kKk6jJZZgg
+2024-11-01 10:30:35,365 - main - INFO - User  1982583714 authorized successfully.
+2024-11-01 14:00:33,468 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiSnKceYK4WVYelZeK8hG2KxSMZRjJnMsyYrKrySwOBM_PL0FEi6OOmQqVAvlUubig
+2024-11-01 14:00:34,307 - main - INFO - User   1982583714 authorized successfully.
+2024-11-01 14:11:24,467 - main - INFO - Received authorization code from user 1982583714: 4/0AVG7fiRcT78gQKc1QYNyokZV5NFthTOn3KN61IUwDyujC4z0mH6xiVHe33sxFXCSvSrzAg
+2024-11-01 14:11:25,550 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 10:39:29,394 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0Z1ebtYLiIYRFkQ5C_WJR3Dl470RHXaCoe3nkIhksFQMbm74HHiguYg_mWsr-t1rA
+2024-11-12 10:39:30,662 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 10:54:34,968 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0YZ-x81bbB0C889y9XNaKrTIBh7ktjgGL9-n3Wg7Zj6SunUA9tOrzVKyQSoX5WJlg
+2024-11-12 10:54:37,815 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 10:55:32,581 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 10:55:37,570 - main - ERROR - Ошибка при добавлении события: 'str' object has no attribute 'get'
+2024-11-12 10:56:01,269 - main - INFO - Received text message: "Сегодня С 10:00 До 12:00 Встреча"
+2024-11-12 10:56:11,635 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 10:56:15,399 - main - ERROR - Ошибка при добавлении события: 'str' object has no attribute 'get'
+2024-11-12 10:58:54,939 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0afw5xX9aj6yCZA6f3WE-GTpmdWbcYohgybGxTAP2S8dk5zlU0ABJVuBTmnBnTqMQ
+2024-11-12 10:58:56,474 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 10:59:20,639 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 10:59:25,247 - main - ERROR - Ошибка при добавлении события: 'str' object has no attribute 'get'
+2024-11-12 11:00:29,759 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0aCUWn5GIxchPsuKHMdBZWGgh9oLV3LZbRAhdjaXuYBXPFP471Q1zRRBAiKJWEtrw
+2024-11-12 11:00:31,125 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 11:00:42,664 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 11:06:05,832 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0YTQSURRDKxBTTyONi5Qfsd6w07alo63mepPCzYSEGKjDW0u5PfGWSPCvSX3Su2Sw
+2024-11-12 11:06:08,200 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 11:06:28,574 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 11:06:33,371 - main - ERROR - Ошибка при добавлении события: 'coroutine' object has no attribute 'get'
+2024-11-12 11:11:02,960 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0YuAtL6vB_8jW2f9of-GsEneJ5a25Lf3Up_ptJejMinzRDkYPzyPyADFBeIzne02w
+2024-11-12 11:11:04,473 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 11:11:18,557 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 11:11:21,630 - main - ERROR - Ошибка при добавлении события: 'str' object has no attribute 'get'
+2024-11-12 11:19:53,721 - main - INFO - Received authorization code from user 1982583714: 4/0AeanS0Y6SYGyKUDu2yJsTeqwyYOHUDbfFnyAtX_ZMFBIGrzPME2cX6wa2Y0E0_Qv5-USZA
+2024-11-12 11:19:56,603 - main - INFO - User   1982583714 authorized successfully.
+2024-11-12 11:20:08,402 - main - INFO - Received text message: Сегодня С 10:00 До 12:00 Встреча
+2024-11-12 11:28:25,350 - main - INFO - Received text message: Послезавтра С 09:00 До 10:00 Звонок

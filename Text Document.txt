@@ -1,0 +1,519 @@
+main.py:
+```
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+import nest_asyncio
+import asyncio
+
+from settings import TELEGRAM_TOKEN
+from commands import start, help_command
+from auth import authorize, handle_auth_code
+from timezone import set_timezone, timezone_button
+from add_event_voice import handle_voice
+from add_event_text import add_event_from_text
+
+def setup_handlers(application):
+    handlers = [
+        CommandHandler('start', start),
+        CommandHandler('help', help_command),
+        CommandHandler('authorize', authorize),
+        CommandHandler('auth_code', handle_auth_code),
+        CommandHandler('set_timezone', set_timezone),
+        CallbackQueryHandler(timezone_button),
+        MessageHandler(filters.VOICE, handle_voice),
+        MessageHandler(filters.TEXT & ~filters.COMMAND, add_event_from_text),
+    ]   
+    for handler in handlers:
+        application.add_handler(handler)
+
+async def main() -> None:
+    application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    setup_handlers(application)
+    await application.run_polling()
+
+if __name__ == '__main__':
+    nest_asyncio.apply()
+    asyncio.run(main())
+```
+auth.py:
+```
+from google_auth_oauthlib.flow import Flow
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from settings import CLIENT_SECRETS_FILE, SCOPES, REDIRECT_URI, auth_flows, user_credentials
+from logger import logger
+
+AUTH_MESSAGE = (
+    'Нажмите кнопку ниже для авторизации:\n'
+    'После авторизации вы будете перенаправлены на страницу, где получите код.\n'
+    'Пожалуйста, скопируйте этот код и отправьте его в Telegram, используя команду /auth_code <код>.'
+)
+NO_AUTH_MESSAGE = 'Пожалуйста, сначала выполните команду /authorize.'
+SUCCESS_MESSAGE = ('✅ Авторизация прошла успешно! '
+                   'Теперь вызовите команду /set_timezone чтобы установить часовой пояс, '
+                   'или отправьте своё местоположение.')
+ERROR_MESSAGE = '❌ Ошибка авторизации. Попробуйте снова.'
+
+async def authorize(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    flow = Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, 
+        scopes=SCOPES, 
+        redirect_uri=REDIRECT_URI
+    )
+    auth_flows[user_id] = flow
+    authorization_url, _ = flow.authorization_url()
+
+    keyboard = [[InlineKeyboardButton("Авторизоваться", url=authorization_url)]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(AUTH_MESSAGE, reply_markup=reply_markup)
+
+async def handle_auth_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    if not context.args:
+        await update.message.reply_text("❌ Пожалуйста, укажите код авторизации после команды.")
+        return
+
+    code = ' '.join(context.args).strip()
+
+    logger.info(f"Received authorization code from user {user_id}: {code}")
+
+    if user_id not in auth_flows:
+        logger.warning(f"No auth flow found for user {user_id}.")
+        await update.message.reply_text(NO_AUTH_MESSAGE)
+        return
+
+    flow = auth_flows.pop(user_id)
+
+    try:
+        flow.fetch_token(code=code)
+        user_credentials[user_id] = flow.credentials
+        await update.message.reply_text(SUCCESS_MESSAGE)
+        logger.info(f"User   {user_id} authorized successfully.")
+    except Exception as e:
+        await update.message.reply_text(ERROR_MESSAGE)
+        logger.error(f'Authorization error for user {user_id}: {e}')
+```
+logger.py:
+```
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+
+def setup_logger(name, log_file, level=logging.INFO):
+    """Function to setup as many loggers as you want"""
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    os.makedirs('logs', exist_ok=True)
+    
+    handler = RotatingFileHandler(f'logs/{log_file}', maxBytes=1024*1024, backupCount=5)
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    return logger
+
+logger = setup_logger('main', 'main.log')
+```
+settings.py:
+```
+import os
+from typing import Dict, Any
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+
+from dotenv import load_dotenv
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+if not TELEGRAM_TOKEN:
+    raise ValueError("TELEGRAM_TOKEN not found in environment variables")
+
+CLIENT_SECRETS_FILE = os.getenv('CLIENT_SECRETS_FILE', 'client_secret.json')
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://mamishka79.github.io/home-page-sintes/')
+
+UserTimezones = Dict[int, str]
+UserCredentials = Dict[int, Credentials]
+AuthFlows = Dict[int, Flow]
+
+user_timezones: UserTimezones = {}
+user_credentials: UserCredentials = {}
+auth_flows: AuthFlows = {}
+
+def validate_config() -> None:
+    """Validate all required configuration parameters."""
+    if not os.path.exists(CLIENT_SECRETS_FILE):
+        raise FileNotFoundError(f"Client secrets file not found: {CLIENT_SECRETS_FILE}")
+    
+    if not REDIRECT_URI:
+        raise ValueError("REDIRECT_URI is not configured")
+
+class Config:
+    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    
+    @classmethod
+    def get_telegram_token(cls) -> str:
+        return TELEGRAM_TOKEN
+    
+    @classmethod
+    def get_client_secrets_file(cls) -> str:
+        return CLIENT_SECRETS_FILE
+    
+    @classmethod
+    def get_scopes(cls) -> list:
+        return SCOPES
+    
+    @classmethod
+    def get_redirect_uri(cls) -> str:
+        return REDIRECT_URI
+
+validate_config()
+```
+timezone.py:
+```
+import os
+from typing import Dict, Any
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+
+from dotenv import load_dotenv
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+if not TELEGRAM_TOKEN:
+    raise ValueError("TELEGRAM_TOKEN not found in environment variables")
+
+CLIENT_SECRETS_FILE = os.getenv('CLIENT_SECRETS_FILE', 'client_secret.json')
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://mamishka79.github.io/home-page-sintes/')
+
+UserTimezones = Dict[int, str]
+UserCredentials = Dict[int, Credentials]
+AuthFlows = Dict[int, Flow]
+
+user_timezones: UserTimezones = {}
+user_credentials: UserCredentials = {}
+auth_flows: AuthFlows = {}
+
+def validate_config() -> None:
+    """Validate all required configuration parameters."""
+    if not os.path.exists(CLIENT_SECRETS_FILE):
+        raise FileNotFoundError(f"Client secrets file not found: {CLIENT_SECRETS_FILE}")
+    
+    if not REDIRECT_URI:
+        raise ValueError("REDIRECT_URI is not configured")
+
+class Config:
+    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    
+    @classmethod
+    def get_telegram_token(cls) -> str:
+        return TELEGRAM_TOKEN
+    
+    @classmethod
+    def get_client_secrets_file(cls) -> str:
+        return CLIENT_SECRETS_FILE
+    
+    @classmethod
+    def get_scopes(cls) -> list:
+        return SCOPES
+    
+    @classmethod
+    def get_redirect_uri(cls) -> str:
+        return REDIRECT_URI
+
+validate_config()
+```
+command.py:
+```
+import os
+from typing import Dict, Any
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+
+from dotenv import load_dotenv
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+if not TELEGRAM_TOKEN:
+    raise ValueError("TELEGRAM_TOKEN not found in environment variables")
+
+CLIENT_SECRETS_FILE = os.getenv('CLIENT_SECRETS_FILE', 'client_secret.json')
+SCOPES = ['https://www.googleapis.com/auth/calendar']
+REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://mamishka79.github.io/home-page-sintes/')
+
+UserTimezones = Dict[int, str]
+UserCredentials = Dict[int, Credentials]
+AuthFlows = Dict[int, Flow]
+
+user_timezones: UserTimezones = {}
+user_credentials: UserCredentials = {}
+auth_flows: AuthFlows = {}
+
+def validate_config() -> None:
+    """Validate all required configuration parameters."""
+    if not os.path.exists(CLIENT_SECRETS_FILE):
+        raise FileNotFoundError(f"Client secrets file not found: {CLIENT_SECRETS_FILE}")
+    
+    if not REDIRECT_URI:
+        raise ValueError("REDIRECT_URI is not configured")
+
+class Config:
+    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    
+    @classmethod
+    def get_telegram_token(cls) -> str:
+        return TELEGRAM_TOKEN
+    
+    @classmethod
+    def get_client_secrets_file(cls) -> str:
+        return CLIENT_SECRETS_FILE
+    
+    @classmethod
+    def get_scopes(cls) -> list:
+        return SCOPES
+    
+    @classmethod
+    def get_redirect_uri(cls) -> str:
+        return REDIRECT_URI
+
+validate_config()
+```
+add_event_voice.py:
+```
+import re
+from googleapiclient.discovery import build
+import pytz
+from datetime import datetime, timedelta
+from telegram import Update
+from telegram.ext import ContextTypes
+import speech_recognition as sr
+from pydub import AudioSegment
+from settings import user_timezones, user_credentials
+from logger import logger
+
+VOICE_FILE_OGA = 'voice.oga'
+VOICE_FILE_WAV = 'voice.wav'
+
+ERROR_MESSAGES = {
+    'invalid_format': "❌ Некорректный формат команды. Попробуйте еще раз.",
+    'invalid_time': "❌ Время окончания должно быть позже времени начала.",
+    'no_auth': "❌ Сначала выполните команду /authorize.",
+    'event_error': "❌ Ошибка при добавлении события.",
+    'no_voice': "❌ Не удалось получить голосовое сообщение.",
+    'download_error': "❌ Ошибка при загрузке файла: {}",
+    'convert_error': "❌ Ошибка при конвертации файла: {}",
+    'recognition_error': "❌ Не удалось распознать голосовое сообщение.",
+    'service_error': "❌ Ошибка сервиса распознавания: {}"
+}
+
+DATE_TIME_PATTERN = re.compile(
+    r"(?P<date>сегодня|завтра|послезавтра|пустым\sоставить|на\sследующей\sнеделе|"
+    r"через\s(два|три)\s(дня|недели|месяца|года)|\d{1,2}\s[а-я]+\s\d{4})\s+"
+    r"(?:с|от)?\s*(?P<start_hour>\d{1,2}):?(?P<start_min>\d{2})?\s*(?:-|до)?\s*"
+    r"(?P<end_hour>\d{1,2}):?(?P<end_min>\d{2})?\s*(?P<title>.+)|"
+    r"(?P<today_with_time>сегодня\s+с\s(?P<start_hour_2>\d{1,2}):?(?P<start_min_2>\d{2})?\s+"
+    r"до\s+(?P<end_hour_2>\d{1,2}):?(?P<end_min_2>\d{2})?\s(?P<title_2>.+))"
+)
+
+def parse_time(match):
+    start_hour = int(match.group("start_hour") or match.group("start_hour_2") or 0)
+    start_min = int(match.group("start_min") or match.group("start_min_2") or 0)
+    end_hour = int(match.group("end_hour") or match.group("end_hour_2") or 0)
+    end_min = int(match.group("end_min") or match.group("end_min_2") or 0)
+    return start_hour, start_min, end_hour, end_min
+
+def get_event_date(date_text: str, today: datetime.date) -> datetime.date:
+    date_mapping = {
+        "сегодня": today,
+        "пустым оставить": today,
+        "завтра": today + timedelta(days=1),
+        "послезавтра": today + timedelta(days=2),
+    }
+    
+    if date_text in date_mapping:
+        return date_mapping[date_text]
+    elif "через" in date_text:
+        days = 2 if "два" in date_text else 3
+        return today + timedelta(days=days)
+    
+    return today
+
+async def handle_error(update: Update, message: str):
+    await update.message.reply_text(message)
+
+async def add_event_to_calendar(service, event: dict) -> str:
+    event_result = service.events().insert(calendarId='primary', body=event).execute()
+    return f'✅ Событие добавлено: {event_result.get("htmlLink")}'
+
+async def add_event_from_voice(update: Update, message_text: str) -> None:
+    user_id = update.effective_user.id
+    timezone = user_timezones.get(user_id, 'UTC')
+    tz = pytz.timezone(timezone)
+    
+    pattern = DATE_TIME_PATTERN
+    match = pattern.search(message_text)
+
+    if not match:
+        await handle_error(update, ERROR_MESSAGES['invalid_format'])
+        return
+
+    start_hour, start_min, end_hour, end_min = parse_time(match)
+    title = (match.group("title") or match.group("title_2")).strip()
+    date_text = match.group("date")
+    today = datetime.now(tz).date()
+    event_date = get_event_date(date_text, today)
+
+    event_start = tz.localize(datetime.combine(event_date, datetime.min.time()) + timedelta(hours=start_hour, minutes=start_min))
+    event_end = tz.localize(datetime.combine(event_date, datetime.min.time()) + timedelta(hours=end_hour, minutes=end_min))
+
+    if event_end <= event_start:
+        await handle_error(update, ERROR_MESSAGES['invalid_time'])
+        return
+
+    try:
+        credentials = user_credentials.get(user_id)
+        if not credentials:
+            await handle_error(update, ERROR_MESSAGES['no_auth'])
+            return
+
+        service = build('calendar', 'v3', credentials=credentials)
+        event = {
+            'summary': title,
+            'start': {'dateTime': event_start.isoformat(), 'timeZone': timezone},
+            'end': {'dateTime': event_end.isoformat(), 'timeZone': timezone},
+        }
+        event_result = service.events().insert(calendarId='primary', body=event).execute()
+        await update.message.reply_text(f'✅ Событие добавлено: {event_result.get("htmlLink")}')
+    except Exception as e:
+        await handle_error(update, ERROR_MESSAGES['event_error'])
+        logger.error(f"Ошибка при добавлении события: {e}")
+
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    voice = update.message.voice
+    if voice is None:
+        await handle_error(update, ERROR_MESSAGES['no_voice'])
+        return
+    
+    voice_file = await voice.get_file()
+
+    try:
+        await voice_file.download_to_drive('voice.oga')
+    except Exception as e:
+        await handle_error(update, f"❌ Ошибка при загрузке файла: {e}")
+        return
+
+    try:
+        audio = AudioSegment.from_ogg('voice.oga')
+        audio.export('voice.wav', format='wav')
+    except Exception as e:
+        await handle_error(update, f"❌ Ошибка при конвертации файла: {e}")
+        return
+
+    recognizer = sr.Recognizer()
+    with sr.AudioFile('voice.wav') as source:
+        audio_data = recognizer.record(source)
+        try:
+            message_text = recognizer.recognize_google(audio_data, language='ru-RU')
+            await update.message.reply_text(f"Вы сказали: {message_text}")
+            await add_event_from_voice(update, message_text)
+        except sr.UnknownValueError:
+            await handle_error(update, ERROR_MESSAGES['recognition_error'])
+        except sr.RequestError as e:
+            await handle_error(update, f"❌ Ошибка сервиса распознавания: {e}")
+        except Exception as e:
+            await handle_error(update, f"❌ Произошла ошибка: {str(e)}")
+            logger.error(f"Ошибка при обработке голосового сообщения: {str(e)}")
+```
+add_event_text.py:
+```
+import re
+from googleapiclient.discovery import build
+import pytz
+from datetime import datetime, timedelta
+from telegram import Update
+from telegram.ext import ContextTypes
+from settings import user_timezones, user_credentials
+from logger import logger
+
+ERROR_MESSAGES = {
+    'invalid_format': "❌ Некорректный формат команды. Попробуйте еще раз.",
+    'invalid_time': "❌ Время окончания должно быть позже времени начала.",
+    'no_auth': "❌ Сначала выполните команду /authorize.",
+    'event_error': "❌ Ошибка при добавлении события."
+}
+
+DATE_TIME_PATTERN = re.compile(
+    r"(?i)(сегодня|завтра|послезавтра)\s+" 
+    r"(?:с\s+)?(\d{1,2}):(\d{2})\s+"
+    r"(?:до\s+)?(\d{1,2}):(\d{2})\s+"
+    r"(.+)"
+)
+
+DATE_MAPPING = {
+    "сегодня": 0,
+    "завтра": 1,
+    "послезавтра": 2,
+}
+
+def calculate_event_date(date_text: str, today: datetime.date) -> datetime.date:
+    if date_text in DATE_MAPPING:
+        return today + timedelta(days=DATE_MAPPING[date_text])
+    return today
+
+async def add_event_to_calendar(service, event: dict) -> str:
+    event_result = service.events().insert(calendarId='primary', body=event).execute()
+    return f'✅ Событие добавлено: {event_result.get("htmlLink")}'
+
+async def add_event_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    message_text = update.message.text.strip().title()
+
+    if user_id not in user_credentials:
+        await update.message.reply_text(ERROR_MESSAGES['no_auth'])
+        return
+
+    tz = pytz.timezone(user_timezones.get(user_id, 'UTC'))
+    logger.info(f"Received text message: {message_text}")
+
+    match = DATE_TIME_PATTERN.match(message_text)
+    if not match:
+        await update.message.reply_text(ERROR_MESSAGES['invalid_format'])
+        return
+
+    date_text, start_hour, start_min, end_hour, end_min, title = match.groups()
+    start_hour, start_min, end_hour, end_min = map(int, (start_hour, start_min, end_hour, end_min))
+
+    today = datetime.now(tz).date()
+    event_date = calculate_event_date(date_text, today)
+
+    event_start = tz.localize(datetime.combine(event_date, datetime.min.time()) + 
+                               timedelta(hours=start_hour, minutes=start_min))
+    event_end = tz.localize(datetime.combine(event_date, datetime.min.time()) + 
+                             timedelta(hours=end_hour, minutes=end_min))
+
+    if event_end <= event_start:
+        await update.message.reply_text(ERROR_MESSAGES['invalid_time'])
+        return
+
+    try:
+        credentials = user_credentials[user_id]
+        service = build('calendar', 'v3', credentials=credentials)
+        event = {
+            'summary': title.strip(),
+            'start': {'dateTime': event_start.isoformat(), 'timeZone': tz.zone},
+            'end': {'dateTime': event_end.isoformat(), 'timeZone': tz.zone},
+        }
+        await update.message.reply_text(await add_event_to_calendar(service, event))
+    except Exception as e:
+        await update.message.reply_text(ERROR_MESSAGES['event_error'])
+        logger.error(f"Ошибка при добавлении события: {e}")
+```
