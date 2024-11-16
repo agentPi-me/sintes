@@ -1,5 +1,7 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
+from datetime import datetime
+import pytz
 
 user_timezones = {}
 
@@ -28,3 +30,11 @@ async def timezone_button(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     timezone = query.data
     user_timezones[query.from_user.id] = timezone
     await query.edit_message_text(f"✅ Часовой пояс установлен: {timezone}. Дальше можете узнать что делать, вызывая команду /help")
+
+def convert_to_user_timezone(user_id, naive_datetime):
+    if user_id in user_timezones:
+        user_timezone = user_timezones[user_id]
+        tz = pytz.timezone(user_timezone)
+        local_datetime = tz.localize(naive_datetime)
+        return local_datetime
+    return naive_datetime
