@@ -1,6 +1,11 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 import pytz
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 user_timezones = {}
 
@@ -23,6 +28,7 @@ async def timezone_button(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     timezone = query.data
     user_timezones[query.from_user.id] = timezone
+    logger.info(f"Часовой пояс для пользователя {query.from_user.id} установлен: {timezone}")
     await query.edit_message_text(f"✅ Часовой пояс установлен: {timezone}. Теперь вы можете использовать команду /help для дальнейших инструкций.")
 
 def convert_to_user_timezone(user_id, naive_datetime):
@@ -31,5 +37,7 @@ def convert_to_user_timezone(user_id, naive_datetime):
         user_timezone = user_timezones[user_id]
         tz = pytz.timezone(user_timezone)
         local_datetime = tz.localize(naive_datetime)
+        logger.info(f"Конвертация времени в часовой пояс пользователя {user_id}: {local_datetime}")
         return local_datetime
+    logger.warning(f"Часовой пояс для пользователя {user_id} не установлен. Используется naive_datetime.")
     return naive_datetime
