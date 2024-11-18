@@ -59,9 +59,9 @@ async def add_event_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE
     event_date = calculate_event_date(date_text, today)
 
     event_start = tz.localize(datetime.combine(event_date, datetime.min.time()) + 
-                               timedelta(hours=start_hour, minutes=start_min))
+        timedelta(hours=start_hour, minutes=start_min))
     event_end = tz.localize(datetime.combine(event_date, datetime.min.time()) + 
-                             timedelta(hours=end_hour, minutes=end_min))
+        timedelta(hours=end_hour, minutes=end_min))
 
     if event_end <= event_start:
         await update.message.reply_text(ERROR_MESSAGES['invalid_time'])
@@ -72,8 +72,8 @@ async def add_event_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE
         service = build('calendar', 'v3', credentials=credentials)
         event = {
             'summary': title.strip(),
-            'start': {'dateTime': event_start.isoformat(), 'timeZone': tz.zone},
-            'end': {'dateTime': event_end.isoformat(), 'timeZone': tz.zone},
+            'start': {'dateTime': event_start.isoformat(), 'timeZone': user_timezones[user_id]},  # Используем часовой пояс пользователя
+            'end': {'dateTime': event_end.isoformat(), 'timeZone': user_timezones[user_id]},  # Используем часовой пояс пользователя
         }
         await update.message.reply_text(await add_event_to_calendar(service, event))
     except Exception as e:

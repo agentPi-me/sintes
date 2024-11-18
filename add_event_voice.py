@@ -81,7 +81,7 @@ async def add_event_from_voice(update: Update, message_text: str) -> None:
     today = datetime.now(tz).date()
     event_date = get_event_date(date_text, today)
 
-    event_start = tz.localize(datetime.combine(event_date, datetime.min.time()) + timedelta(hours=start_hour, minutes=start_min))
+    event_start = tz.localize(datetime.combine (event_date, datetime.min.time()) + timedelta(hours=start_hour, minutes=start_min))
     event_end = tz.localize(datetime.combine(event_date, datetime.min.time()) + timedelta(hours=end_hour, minutes=end_min))
 
     if event_end <= event_start:
