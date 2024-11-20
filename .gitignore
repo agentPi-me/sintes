@@ -2,3 +2,4 @@
 *.pyc
 __pycache__/
 client_secret.json
+user_data.json
