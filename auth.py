@@ -1,12 +1,8 @@
 from google_auth_oauthlib.flow import Flow
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, CommandHandler
+from telegram.ext import ContextTypes
 from settings import CLIENT_SECRETS_FILE, SCOPES, REDIRECT_URI, auth_flows, user_credentials
 from logger import logger
-from database import get_db_connection, initialize_db
-
-# Вызываем инициализацию базы данных
-initialize_db()
 
 AUTH_MESSAGE = (
     'Нажмите кнопку ниже для авторизации:\n'
@@ -54,34 +50,8 @@ async def handle_auth_code(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     try:
         flow.fetch_token(code=code)
         user_credentials[user_id] = flow.credentials
-        
-        # Сохранение учетных данных в базу данных
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute('INSERT OR REPLACE INTO user_credentials (user_id, access_token, refresh_token) VALUES (?, ?, ?)',
-                  (user_id, flow.credentials.token, flow.credentials.refresh_token))
-        
-        # Добавление пользователя в таблицу пользователей
-        c.execute('INSERT OR IGNORE INTO users (user_id) VALUES (?)', (user_id,))
-        
-        conn.commit()
-        conn.close()
-        
         await update.message.reply_text(SUCCESS_MESSAGE)
-        logger.info(f"User  {user_id} authorized successfully.")
+        logger.info(f"User   {user_id} authorized successfully.")
     except Exception as e:
         await update.message.reply_text(ERROR_MESSAGE)
         logger.error(f'Authorization error for user {user_id}: {e}')
-
-async def count_users(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT COUNT(*) FROM users')
-    user_count = c.fetchone()[0]
-    conn.close()
-    
-    await update.message.reply_text(f"Количество авторизованных пользователей: {user_count}")
-
-# Регистрация команды count_users
-def register_handlers(dispatcher):
-    dispatcher.add_handler(CommandHandler("count_users", count_users))

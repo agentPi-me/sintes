@@ -3,8 +3,8 @@ import nest_asyncio
 import asyncio
 
 from settings import TELEGRAM_TOKEN
-from commands import start, help_command
-from auth import authorize, handle_auth_code, register_handlers, count_users  # Импортируем count_users
+from commands import start, help_command, user_count
+from auth import authorize, handle_auth_code
 from timezone import set_timezone, timezone_button
 from add_event_voice import handle_voice
 from add_event_text import add_event_from_text
@@ -18,7 +18,7 @@ def setup_handlers(application):
         CommandHandler('auth_code', handle_auth_code),
         CommandHandler('set_timezone', set_timezone),
         CommandHandler('edit_event', edit_event),
-        CommandHandler('count_users', count_users),  # Регистрация команды здесь
+        CommandHandler("user_count", user_count),  # Регистрация команды здесь
         CallbackQueryHandler(timezone_button),
         MessageHandler(filters.VOICE, handle_voice),
         MessageHandler(filters.TEXT & ~filters.COMMAND, add_event_from_text),

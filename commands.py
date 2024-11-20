@@ -1,6 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from user_data import add_user, get_user_count
+
 START_MESSAGE = """
 Добро пожаловать в Sintes!
 
@@ -40,7 +42,14 @@ HELP_MESSAGE = r"""
 """
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+    username = update.effective_user.username or "Без никнейма"  # Если никнейм отсутствует
+    add_user(user_id, username)  # Сохраняем никнейм пользователя
     await update.message.reply_text(START_MESSAGE)
+
+async def user_count(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    count = get_user_count()
+    await update.message.reply_text(f"Количество зарегистрированных пользователей: {count}")
     
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
