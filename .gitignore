@@ -1,5 +1,31 @@
-.env
-*.pyc
+# Byte-compiled / optimized / DLL files
 __pycache__/
-client_secret.json
-user_data.json
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+
+# Logs
+logs/
+*.log
+
+# Voice files
+voice.oga
+voice.wav
+
+# Credentials and sensitive data
+*.json
+.env
+
+# IDE files
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp

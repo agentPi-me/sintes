@@ -10,13 +10,10 @@ logger = logging.getLogger(__name__)
 user_timezones = {}
 
 def generate_timezone_buttons():
-    """Создает кнопки для выбора часового пояса."""
-    timezones = pytz.all_timezones  # Используем все доступные часовые пояса из pytz
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(tz, callback_data=tz) for tz in timezones[i:i+4]]
-        for i in range(0, len(timezones), 4)
+        [InlineKeyboardButton("Алматы (Asia/Almaty)", callback_data="Asia/Almaty")]
     ])
-
+    
 async def set_timezone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Отправляет сообщение с кнопками для выбора часового пояса."""
     await update.message.reply_text("Выберите часовой пояс:", reply_markup=generate_timezone_buttons())

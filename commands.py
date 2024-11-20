@@ -2,8 +2,6 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from user_data import add_user, get_user_count, add_start_count, get_unique_start_count
 
-from user_data import add_user, get_user_count
-
 START_MESSAGE = """
 Добро пожаловать в Sintes!
 
@@ -32,7 +30,6 @@ HELP_MESSAGE = r"""
 *Примеры команд:*
 • "Сегодня с 10:00 до 12:00 Встреча"
 • "Завтра с 14:30 до 15:30 Совещание"
-• "Послезавтра с 09:00 до 10:00 Звонок"
 
 *Советы:*
 • Говорите чётко и разборчиво
