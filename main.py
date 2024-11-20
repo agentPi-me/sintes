@@ -4,7 +4,7 @@ import asyncio
 
 from settings import TELEGRAM_TOKEN
 from commands import start, help_command
-from auth import authorize, handle_auth_code
+from auth import authorize, handle_auth_code, register_handlers  # Импортируем register_handlers
 from timezone import set_timezone, timezone_button
 from add_event_voice import handle_voice
 from add_event_text import add_event_from_text
@@ -24,6 +24,9 @@ def setup_handlers(application):
     ]   
     for handler in handlers:
         application.add_handler(handler)
+
+    # Регистрация дополнительных обработчиков
+    register_handlers(application)  # Регистрация команды count_users
 
 async def main() -> None:
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
