@@ -29,3 +29,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+
+# В .gitignore добавить
+user_data.json
