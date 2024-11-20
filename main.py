@@ -1,6 +1,7 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 import nest_asyncio
 import asyncio
+import os  # Добавьте импорт os
 
 from settings import TELEGRAM_TOKEN
 from commands import start, help_command
@@ -26,11 +27,16 @@ def setup_handlers(application):
         application.add_handler(handler)
 
 async def main() -> None:
+    if not TELEGRAM_TOKEN:
+        raise ValueError("Telegram token is not set")
+    
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     setup_handlers(application)
     await application.run_polling()
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    
     nest_asyncio.apply()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
