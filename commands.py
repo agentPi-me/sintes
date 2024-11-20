@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import ContextTypes
+from user_data import add_user, get_user_count, add_start_count, get_unique_start_count
 
 from user_data import add_user, get_user_count
 
@@ -44,9 +45,19 @@ HELP_MESSAGE = r"""
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     username = update.effective_user.username or "Без никнейма"
+    
+    # Добавляем пользователя в базу
     add_user(user_id, username)
-    count = get_user_count()
-    welcome_message = f"{START_MESSAGE}\n\nКоличество зарегистрированных пользователей: {count}"
+    
+    # Получаем количество нажатий /start
+    is_new_start = add_start_count(user_id)
+    unique_start_count = get_unique_start_count()
+    
+    # Формируем сообщение
+    welcome_message = f"{START_MESSAGE}\n\n" \
+                      f"Количество зарегистрированных пользователей: {get_user_count()}\n" \
+                      f"Уникальных пользователей, нажавших /start: {unique_start_count}"
+    
     await update.message.reply_text(welcome_message)
      
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

@@ -43,3 +43,23 @@ def add_user(user_id, username):
 def get_user_count():
     user_data = load_user_data()
     return len(user_data)
+
+# В user_data.py добавьте новую функцию
+def add_start_count(user_id):
+    user_data = load_user_data()
+    
+    # Если нет ключа start_count, создаем его
+    if 'start_count' not in user_data:
+        user_data['start_count'] = {}
+    
+    # Добавляем пользователя, если его еще нет
+    if str(user_id) not in user_data['start_count']:
+        user_data['start_count'][str(user_id)] = 1
+        save_user_data(user_data)
+        return True
+    
+    return False
+
+def get_unique_start_count():
+    user_data = load_user_data()
+    return len(user_data.get('start_count', {}))
