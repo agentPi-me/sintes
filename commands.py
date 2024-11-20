@@ -43,14 +43,14 @@ HELP_MESSAGE = r"""
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    username = update.effective_user.username or "Без никнейма"  # Если никнейм отсутствует
-    add_user(user_id, username)  # Сохраняем никнейм пользователя
+    username = update.effective_user.username or "Без никнейма"
+    add_user(user_id, username)
     await update.message.reply_text(START_MESSAGE)
 
 async def user_count(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     count = get_user_count()
     await update.message.reply_text(f"Количество зарегистрированных пользователей: {count}")
-    
+     
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         await update.message.reply_text(
