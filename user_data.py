@@ -1,4 +1,3 @@
-# user_data.py
 import json
 import os
 import logging
@@ -46,11 +45,11 @@ class UserDataManager:
         """Добавление нового пользователя."""
         user_data = cls.load_user_data()
         user_id_str = str(user_id)
-        
+
         if user_id_str not in user_data.get('users', {}):
             if 'users' not in user_data:
                 user_data['users'] = {}
-            
+
             user_data['users'][user_id_str] = username
             cls.save_user_data(user_data)
             logger.info(f"Добавлен новый пользователь: {user_id}")
@@ -66,15 +65,15 @@ class UserDataManager:
         """Подсчет количества нажатий /start."""
         user_data = cls.load_user_data()
         user_id_str = str(user_id)
-        
+
         if 'start_count' not in user_data:
             user_data['start_count'] = {}
-        
+
         if user_id_str not in user_data['start_count']:
             user_data['start_count'][user_id_str] = 1
             cls.save_user_data(user_data)
             return True
-        
+
         return False
 
     @classmethod
@@ -83,10 +82,8 @@ class UserDataManager:
         user_data = cls.load_user_data()
         return len(user_data.get('start_count', {}))
 
-# Создаем синглтон для удобства использования
 user_data_manager = UserDataManager()
 
-# Для обратной совместимости с существующим кодом
 def load_user_data():
     return user_data_manager.load_user_data()
 

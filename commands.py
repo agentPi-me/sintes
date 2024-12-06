@@ -49,14 +49,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
     username = update.effective_user.username or "Без никнейма"
     
-    # Добавляем пользователя в базу
     add_user(user_id, username)
     
-    # Получаем количество нажатий /start
     is_new_start = add_start_count(user_id)
     unique_start_count = get_unique_start_count()
     
-    # Формируем сообщение
     welcome_message = f"{START_MESSAGE}\n\n" \
                       f"Количество зарегистрированных пользователей: {get_user_count()}\n" \
                       f"Уникальных пользователей, нажавших /start: {unique_start_count}"

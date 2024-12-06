@@ -9,6 +9,7 @@ from timezone import set_timezone, timezone_button
 from add_event_voice import handle_voice
 from add_event_text import add_event_from_text
 from edit_event import edit_event
+from add_event_text import get_user_events
 
 def setup_handlers(application):
     handlers = [
@@ -18,6 +19,7 @@ def setup_handlers(application):
         CommandHandler('auth', handle_auth_code),
         CommandHandler('timezone', set_timezone),
         CommandHandler('edit', edit_event),
+        CommandHandler("today_tasks", get_user_events),
         CallbackQueryHandler(timezone_button),
         MessageHandler(filters.VOICE, handle_voice),
         MessageHandler(filters.TEXT & ~filters.COMMAND, add_event_from_text),

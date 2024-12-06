@@ -2,7 +2,7 @@ import re
 from googleapiclient.discovery import build
 import pytz
 from datetime import datetime, timedelta
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from settings import user_timezones, user_credentials
 from logger import logger
@@ -32,9 +32,11 @@ def calculate_event_date(date_text: str, today: datetime.date) -> datetime.date:
         return today + timedelta(days=DATE_MAPPING[date_text])
     return today
 
-async def add_event_to_calendar(service, event: dict) -> str:
-    event_result = service.events().insert(calendarId='primary', body=event).execute()
-    return f'✅ Событие добавлено: {event_result.get("htmlLink")}'
+async def add_event_to_calendar(service, event: dict) -> InlineKeyboardMarkup:
+    keyboard = [[InlineKeyboardButton("Событие добавлено", callback_data='event_added')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    return reply_markup
 
 async def add_event_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
@@ -75,7 +77,51 @@ async def add_event_from_text(update: Update, context: ContextTypes.DEFAULT_TYPE
             'start': {'dateTime': event_start.isoformat(), 'timeZone': tz.zone},
             'end': {'dateTime': event_end.isoformat(), 'timeZone': tz.zone},
         }
-        await update.message.reply_text(await add_event_to_calendar(service, event))
+        
+        await update.message.reply_text("✅ Событие добавлено:", reply_markup=await add_event_to_calendar(service, event))
+        
     except Exception as e:
         await update.message.reply_text(ERROR_MESSAGES['event_error'])
         logger.error(f"Ошибка при добавлении события: {e}")
+        
+async def get_user_events(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_id = update.effective_user.id
+
+    if user_id not in user_credentials:
+        await update.message.reply_text("❌ Сначала выполните команду /authorize.")
+        return
+
+    try:
+        credentials = user_credentials[user_id]
+        service = build('calendar', 'v3', credentials=credentials)
+
+        today = datetime.now(pytz.timezone(user_timezones.get(user_id, 'UTC')))
+        start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        events_result = service.events().list(
+            calendarId='primary',
+            timeMin=start_of_day.isoformat(),
+            timeMax=end_of_day.isoformat(),
+            singleEvents=True,
+            orderBy='startTime'
+        ).execute()
+
+        events = events_result.get('items', [])
+
+        if not events:
+            await update.message.reply_text("📅 У вас нет событий на сегодня.")
+            return
+
+        response_message = "📅 Ваши события на сегодня:\n"
+        for event in events:
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            start_time = datetime.fromisoformat(start[:-1])
+            formatted_start = start_time.strftime("%d %B %Y, %H:%M")
+            response_message += f"- {event['summary']} (Начало: {formatted_start})\n"
+
+        await update.message.reply_text(response_message)
+
+    except Exception as e:
+        await update.message.reply_text("❌ Ошибка при получении событий.")
+        logger.error(f"Ошибка при получении событий: {e}")
